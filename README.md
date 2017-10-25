@@ -8,6 +8,10 @@ Mycrofts install broadcast listener should register all module install intents, 
 
 Because Mycroft will need to hold a wakelock, and be an active high priority service, it's notification bar should have an edittext and submit button for users to enter textual input if they are unable to talk
 
+Care needs to be taken in the parser broadcast design. If too many parsers are installed it could really impact performance and battery life
+
+A settings menu should be added to determine which parsers/modules are active (with a toggle to activate/deactivate them) and to set how the wakelock is structured (Always on, only on when screen on, always on when charging, etc)
+
 As time goes on new custom intents can be added, so that other components such as pocketsphinx or the TTS modules can be replaced.
 
 Eventually I am to individualize the Assistant to each user, and incorporate Machine Learning packages, but for now I am trying to replicate Mycrofts core functionality.

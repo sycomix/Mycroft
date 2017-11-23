@@ -13,15 +13,39 @@ public class InstallReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        //Get package ID and send explicit  intent
-        //Save pid in database for package removed
+        /*
+        When a new package is installed, ask package manager for all apps with
+        X,Y,Z... intents. Check returned list against internal DB, update with
+        uninstalled plug-ins. Query parse engines first, then query skills
+         */
+
+        //Get package ID and send explicit intent\
+        // This package ID and name should be saved to query uninstall broadcasts
         Log.i(TAG, "Install broadcast received by NAVCORE");
 
+        //This gets the package name of the new package
         Bundle b = intent.getExtras();
         int uid = b.getInt(Intent.EXTRA_UID);
         String[] packages = context.getPackageManager().getPackagesForUid(uid);
 
+        /*
+        Here, query the PackageManager for all installed packages w/ intent
+        MYCROPT_PARSER_IDENTIFY. save in pm[]
+        check if new package is in list. If so, install
 
+        if not:
+            query for all SKILL_IDENTIFIERS
+            check package name against skill identifiers.
+            if it is found, explicit intent to PARSER_SKILL_INSTALL w/ package name in bundle
+
+            When updating externally, go through same processes, except check skills after installing
+            parser, rather than stopping after parser.
+
+            I want to reduce the amount of queries taking place. Update could be a separate
+            method that can be called separately by the update settings button
+         */
+
+        /*
         //Build an intent explicitly for the newly installed package.
         Intent i = new Intent();
         i.setAction(ACTION_PARSER_IDENTIFY);
@@ -36,6 +60,6 @@ public class InstallReceiver extends BroadcastReceiver {
         }catch(Exception e){
             Log.e(TAG, "There is no receiving engine");
         }
-
+        */
     }
 }

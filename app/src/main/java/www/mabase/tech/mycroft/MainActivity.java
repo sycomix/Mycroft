@@ -1,5 +1,7 @@
 package www.mabase.tech.mycroft;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -14,6 +16,25 @@ import android.widget.TextView;
 import java.security.spec.ECField;
 import java.util.List;
 
+import static java.security.AccessController.getContext;
+
+/**
+ * Copyright (C) 2017 Christopher Carroll
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -22,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 
+    /*
+        This is a simple version of user input for testing the application. Eventually it will be replaced by the SpeakSkill module
+    */
     public void submit(View v){
 
         EditText input = (EditText)findViewById(R.id.utterance);
@@ -34,12 +58,16 @@ public class MainActivity extends AppCompatActivity {
          */
         Intent parse = new Intent();
         parse.setAction("android.intent.action.ADAPT_PARSE");
-        startService(parse);
+        try{
+            startService(parse);
+        } catch (Exception e){
+            Log.i("Mycroft.submit()", "Is Adapt installed");
+        }
     }
 
     // This queries all packages to make sure all parsers are installed, Then it queries
     // to make sure all skills are installed
-    public List isIntentAvailable(Context context, String action){
+    public List getPackageList(Context context, String action){
 
         final PackageManager packageManager = context.getPackageManager();
         final Intent intent = new Intent(action);
@@ -53,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
     public void update(View v) {
         final String IDENTIFY = "android.intent.action.PARSER_IDENTIFY";
 
-        List list = isIntentAvailable(this.getApplicationContext(), IDENTIFY);
+        List list = getPackageList(this.getApplicationContext(), IDENTIFY);
         int size = list.size();
 
         Log.i("Mycroft Core", "Querying package manager: Size "+size);
@@ -61,4 +89,21 @@ public class MainActivity extends AppCompatActivity {
             Log.i("Mycroft Core", list.toString());
         }
     }
+
+    public void startMycroft(View v){
+        Log.i("Mycroft","startMycroft() is a work in progress");
+        Intent mycroft = new Intent();
+        mycroft.setClass(this, MycroftService.class);
+        startService(mycroft);
+    }
+
+    public void stopMycroft(View v){
+        Log.i("Mycroft","stopMycroft() not yet implemented");
+
+        Intent mycroft = new Intent();
+        mycroft.setClass(this, MycroftService.class);
+        stopService(mycroft);
+    }
+
+
 }

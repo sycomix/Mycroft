@@ -14,4 +14,6 @@ A settings menu should be added to determine which parsers/modules are active (w
 
 As time goes on new custom intents can be added, so that other components such as pocketsphinx or the TTS modules can be replaced.
 
+Mycroft is going to take over LibreTask functionality (which should also mirror Tasker functionality) so that it can control every aspect of the phone. Intent parsers should expose intents to Mycroft so they can act as plug-ins to the tasker service
+
 Eventually I am to individualize the Assistant to each user, and incorporate Machine Learning packages, but for now I am trying to replicate Mycrofts core functionality.

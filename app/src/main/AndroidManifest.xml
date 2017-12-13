@@ -31,8 +31,18 @@
         <service
             android:name=".MycroftService"
             android:enabled="true"
-            android:exported="true">
+            android:exported="false">
+            <action android:name="android.intent.action.MYYCROFT_PARSE" />
+
+            <data android:scheme="package" />
         </service>
+
+        <provider
+            android:name=".Databases.MyContentProvider"
+            android:authorities="Mycroft_Core"
+            android:enabled="true"
+            android:exported="true" />
+
     </application>
 
 </manifest>

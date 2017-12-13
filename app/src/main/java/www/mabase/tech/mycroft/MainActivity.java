@@ -2,11 +2,14 @@ package www.mabase.tech.mycroft;
 
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -15,6 +18,7 @@ import android.widget.TextView;
 
 import java.security.spec.ECField;
 import java.util.List;
+import java.util.ServiceConfigurationError;
 
 import static java.security.AccessController.getContext;
 
@@ -52,16 +56,18 @@ public class MainActivity extends AppCompatActivity {
         TextView output = (TextView)findViewById(R.id.output);
 
         output.setText(input.getText().toString());
+        input.setText("");
 
         /*
         Send a parse intent for all parsers. Later this will be a for loop(?) but for now, just work with Adapt
          */
         Intent parse = new Intent();
-        parse.setAction("android.intent.action.ADAPT_PARSE");
+        parse.setAction("android.intent.action.MYYCROFT_PARSE");
+        parse.putExtra("utterance", input.getText().toString());
         try{
             startService(parse);
         } catch (Exception e){
-            Log.i("Mycroft.submit()", "Is Adapt installed");
+            Log.i("Mycroft.submit()", "Something is wrong with MycroftService");
         }
     }
 
@@ -78,6 +84,9 @@ public class MainActivity extends AppCompatActivity {
         return list;
     }
 
+    /*
+    This needs to take the list of parsers and check if there are any others installed
+    */
     public void update(View v) {
         final String IDENTIFY = "android.intent.action.PARSER_IDENTIFY";
 

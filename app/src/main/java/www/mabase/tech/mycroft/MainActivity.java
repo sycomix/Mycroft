@@ -62,7 +62,8 @@ public class MainActivity extends AppCompatActivity {
         Send a parse intent for all parsers. Later this will be a for loop(?) but for now, just work with Adapt
          */
         Intent parse = new Intent();
-        parse.setAction("android.intent.action.MYYCROFT_PARSE");
+        parse.setClass(this, MycroftService.class);
+        parse.setAction("android.intent.action.MYCROFT_PARSE");
         parse.putExtra("utterance", input.getText().toString());
         try{
             startService(parse);

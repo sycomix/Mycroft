@@ -1,13 +1,20 @@
 package www.mabase.tech.mycroft;
 
 import android.app.Service;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
-import static android.webkit.ConsoleMessage.MessageLevel.LOG;
+import static android.content.ContentValues.TAG;
 
 /**
  * This service ensures that Mycroft is always running and always available. It also offers a simple CLI for the user.
@@ -16,7 +23,7 @@ import static android.webkit.ConsoleMessage.MessageLevel.LOG;
 public class MycroftService extends Service {
 
     private static final String ACTION_PARSE_FINISHED = "android.intent.action.PARSE_FINISHED";
-    private static final String ACTION_MYCROFT_PARSE = "android.intent.action.MYYCROFT_PARSE";
+    private static final String ACTION_MYCROFT_PARSE = "android.intent.action.MYCROFT_PARSE";
 
     public MycroftService() {
     }
@@ -60,8 +67,16 @@ public class MycroftService extends Service {
 
     //This is catching MyscroftActivity CLI and VoiceService utterances for parsing.
     private void parseUtterance(String param1) {
-        // TODO: Handle action Foo
-        throw new UnsupportedOperationException("Not yet implemented");
+        //This needs to be changed so it trys to bound the service if unbound
+        if (!mBound) return;
+        // Create and send a message to the service, using a supported 'what' value
+        Message msg = Message.obtain(null, 1, 0, 0);
+        try {
+            mService.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+
     }
 
     /*
@@ -71,7 +86,7 @@ public class MycroftService extends Service {
      */
     @Override
     public void onCreate() {
-        Toast.makeText(this,"Mycroft service started", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Mycroft service started", Toast.LENGTH_SHORT).show();
 
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
@@ -84,11 +99,44 @@ public class MycroftService extends Service {
 
         /*
         Here it should bind up to 4 parser services
-        for(selectedServices){
-            bind(service[i];
-        }
+        request from the core database all parser package names.
          */
+        String ADAPT_PACKAGE = "www.mabase.tech.adapt";
+        String ADAPT_CLASS = "AdaptParser";
+        try {
+            Intent parserInit = new Intent();
+            //This should allow dynamic package names
+            parserInit.setComponent(ComponentName.createRelative(ADAPT_PACKAGE,ADAPT_PACKAGE+"."+ADAPT_CLASS));
+            bindService(parserInit, mConnection, Context.BIND_AUTO_CREATE);
+        } catch (Exception e) {
+            Log.e("MycroftService", "Couldn't seem to bind Adapt");
+        }
     }
+
+    Messenger mService = null;
+    /** Flag indicating whether we have called bind on the service. */
+    boolean mBound;
+
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            // This is called when the connection with the service has been
+            // established, giving us the object we can use to
+            // interact with the service.  We are communicating with the
+            // service using a Messenger, so here we get a client-side
+            // representation of that from the raw IBinder object.
+            mService = new Messenger(service);
+            mBound = true;
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            // This is called when the connection with the service has been
+            // unexpectedly disconnected -- that is, its process crashed.
+            mService = null;
+            mBound = false;
+        }
+    };
+
 
     @Override
     public void onDestroy() {
@@ -99,6 +147,11 @@ public class MycroftService extends Service {
             unbind(service[i]);
         }
          */
+        if (mBound) {
+            unbindService(mConnection);
+            mBound = false;
+        }
+
 
         Toast.makeText(this, "Mycroft service terminated", Toast.LENGTH_SHORT).show();
     }

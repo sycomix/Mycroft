@@ -101,7 +101,7 @@ public class MycroftService extends Service {
         Here it should bind up to 4 parser services
         request from the core database all parser package names.
          */
-        String ADAPT_PACKAGE = "www.mabase.tech.adapt";
+        String ADAPT_PACKAGE = "tech.mabase.www.adapt";
         String ADAPT_CLASS = "AdaptParser";
         try {
             Intent parserInit = new Intent();

@@ -1,15 +1,18 @@
 package www.mabase.tech.mycroft;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 public class InstallReceiver extends BroadcastReceiver {
 
     public final String TAG = "Mycroft Core";
     private static final String ACTION_PARSER_IDENTIFY = "android.intent.action.PARSER_IDENTIFY";
+    private static final String ACTION_SKILL_IDENTIFY = "android.intent.action.SKILL_IDENTIFY";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -27,6 +30,20 @@ public class InstallReceiver extends BroadcastReceiver {
         Bundle b = intent.getExtras();
         int uid = b.getInt(Intent.EXTRA_UID);
         String[] packages = context.getPackageManager().getPackagesForUid(uid);
+        Log.i(TAG, "found package "+packages[0]);
+
+        String bug = packages[0];
+
+        //Don't make this so specific
+        Intent parserId = new Intent();
+        parserId.setAction(ACTION_PARSER_IDENTIFY);
+        parserId.setComponent(ComponentName.createRelative(packages[0],packages[0]+".InstallService"));
+        try {
+            context.startService(parserId);
+            Log.i(TAG,"PARSER_IDENTIFY intent sent");
+        }catch(Exception e){
+            Log.e(TAG, "There is no receiving engine");
+        }
 
         /*
         Here, query the PackageManager for all installed packages w/ intent

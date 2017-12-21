@@ -54,8 +54,9 @@ public class MainActivity extends AppCompatActivity {
 
         EditText input = (EditText)findViewById(R.id.utterance);
         TextView output = (TextView)findViewById(R.id.output);
+        String utterance = input.getText().toString();
 
-        output.setText(input.getText().toString());
+        output.setText(utterance);
         input.setText("");
 
         /*
@@ -64,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         Intent parse = new Intent();
         parse.setClass(this, MycroftService.class);
         parse.setAction("android.intent.action.MYCROFT_PARSE");
-        parse.putExtra("utterance", input.getText().toString());
+        parse.putExtra("utterance", utterance);
         try{
             startService(parse);
         } catch (Exception e){

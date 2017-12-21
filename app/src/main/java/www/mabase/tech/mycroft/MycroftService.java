@@ -5,16 +5,14 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * This service ensures that Mycroft is always running and always available. It also offers a simple CLI for the user.
@@ -24,6 +22,7 @@ public class MycroftService extends Service {
 
     private static final String ACTION_PARSE_FINISHED = "android.intent.action.PARSE_FINISHED";
     private static final String ACTION_MYCROFT_PARSE = "android.intent.action.MYCROFT_PARSE";
+    private static final String ACTION_MODULE_CHECK = "android.intent.action.MODULE_CHECK";
 
     public MycroftService() {
     }
@@ -41,12 +40,36 @@ public class MycroftService extends Service {
             final String action = intent.getAction();
             if (ACTION_PARSE_FINISHED.equals(action)) {
                 handleParserFinished(intent.getStringExtra("parser"), intent.getStringExtra("response"));
-            } else if (ACTION_MYCROFT_PARSE.equals(action)) {
+            } else if(ACTION_MYCROFT_PARSE.equals(action)) {
+                Toast.makeText(this, "Sending utterance "+intent.getStringExtra("utterance"), Toast.LENGTH_SHORT).show();
                 parseUtterance(intent.getStringExtra("utterance"));
+            } else if (ACTION_MODULE_CHECK.equals(action)) {
+                String module = intent.getStringExtra("package");
+                Toast.makeText(this, "Checking if module installed", Toast.LENGTH_SHORT).show();
+                checkModule(module);
             }
         }
-
         return START_STICKY;
+    }
+
+    private void checkModule(String module){
+        Log.i("MycroftService", "Checking module");
+        Toast.makeText(this, "Checking new module",Toast.LENGTH_SHORT).show();
+        //Replace this with a DB query
+        Intent install = new Intent();
+        String ADAPT_PACKAGE = "tech.mabase.www.adapt";
+        String ADAPT_CLASS = "InstallService";
+        try {
+            Intent parserInit = new Intent();
+            //This should allow dynamic package names
+            parserInit.setComponent(ComponentName.createRelative(ADAPT_PACKAGE,ADAPT_PACKAGE+"."+ADAPT_CLASS));
+            parserInit.setAction("android.intent.action.MODULE_INSTALL");
+            Toast.makeText(this, "Starting module install",Toast.LENGTH_SHORT).show();
+            startService(parserInit);
+            Log.i("MycroftService", "starting install module");
+        } catch (Exception e) {
+            Log.e("MycroftService", "Couldn't seem to start the module install service");
+        }
     }
 
     //This counts the number of responding parsers. When all parsers have responded, it weighs the
@@ -63,14 +86,26 @@ public class MycroftService extends Service {
             executeSkill(decision);
         }
          */
+        Toast.makeText(this, id+" response received. Intent "+response+" picked", Toast.LENGTH_LONG).show();
+        //Execute the skill
+        String SKILL_CLASS = "";
+        String SKILL_PACKAGE = "";
+        Intent skill = new Intent();
+        skill.setComponent(ComponentName.createRelative(SKILL_PACKAGE,SKILL_PACKAGE+"."+SKILL_CLASS));
     }
 
     //This is catching MyscroftActivity CLI and VoiceService utterances for parsing.
     private void parseUtterance(String param1) {
-        //This needs to be changed so it trys to bound the service if unbound
+        //This needs to be changed so it tries to bound the service if unbound
         if (!mBound) return;
         // Create and send a message to the service, using a supported 'what' value
-        Message msg = Message.obtain(null, 1, 0, 0);
+        Message msg = Message.obtain();
+        //Set the what to parse
+        msg.what = 1;
+        //Create bundle with utterance data
+        Bundle bundle = new Bundle();
+        bundle.putString("utterance",param1);
+        msg.setData(bundle);
         try {
             mService.send(msg);
         } catch (RemoteException e) {
@@ -78,7 +113,6 @@ public class MycroftService extends Service {
         }
 
     }
-
     /*
     For this version of Android, I am stuck making the notification a read only
     text display. Once 7.0 becomes more prolific I will be able to add inline
@@ -151,7 +185,6 @@ public class MycroftService extends Service {
             unbindService(mConnection);
             mBound = false;
         }
-
 
         Toast.makeText(this, "Mycroft service terminated", Toast.LENGTH_SHORT).show();
     }

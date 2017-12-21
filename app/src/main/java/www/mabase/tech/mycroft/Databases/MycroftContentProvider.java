@@ -2,11 +2,44 @@ package www.mabase.tech.mycroft.Databases;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.util.Log;
 
 public class MycroftContentProvider extends ContentProvider {
     public MycroftContentProvider() {
+    }
+
+    private static final int ENTITY = 100;
+    private static final int INTENT = 200;
+    private static final int MODULE = 300;
+
+    private static final UriMatcher sUriMatcher = buildUriMatcher();
+    private MycroftDbHelper mDbHelper;
+
+    //Builds a UriMatcher that is used to determine which table is being requested
+    public static UriMatcher buildUriMatcher(){
+
+        String content = MycroftContract.CONTENT_AUTHORITY;
+
+        // All paths to the UriMatcher have a corresponding code to return
+        // when a match is found (the ints above).
+        UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
+
+        matcher.addURI(content, MycroftContract.PATH_ENTITY, ENTITY);
+        matcher.addURI(content, MycroftContract.PATH_INTENT, INTENT);
+        matcher.addURI(content, MycroftContract.PATH_MODULE, MODULE);
+
+        return matcher;
+    }
+
+    @Override
+    public boolean onCreate() {
+        mDbHelper = new MycroftDbHelper(getContext());
+
+        return true;
     }
 
     @Override
@@ -24,14 +57,29 @@ public class MycroftContentProvider extends ContentProvider {
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        // TODO: Implement this to handle requests to insert a new row.
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
+        final SQLiteDatabase db = mDbHelper.getWritableDatabase();
+        long _id = 0;
+        //Uri returnUri;
 
-    @Override
-    public boolean onCreate() {
-        // TODO: Implement this to initialize your content provider on startup.
-        return false;
+        switch(sUriMatcher.match(uri)) {
+            case MODULE:
+                _id = db.insert(MycroftContract.Module.TABLE_NAME, null, values);
+                //Use this to return the row of the entry. It will allow a quick lookup later when
+                //checking for updates
+                /*if(_id > 0){
+                    returnUri =  MycroftContract.Module.buildGenreUri(_id);
+                } else{
+                    throw new UnsupportedOperationException("Unable to insert rows into: " + uri);
+                }
+                break;
+                */
+                Log.e("Mycroft","Wow, it's worked the whole time but you forgot a break");
+                break;
+            default:
+                Log.e("Mycroft","You suck at making Uris");
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+        return null;
     }
 
     @Override
@@ -39,6 +87,23 @@ public class MycroftContentProvider extends ContentProvider {
                         String[] selectionArgs, String sortOrder) {
         // TODO: Implement this to handle query requests from clients.
         throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    //This is for skills and modules to offload all of their information in Mycroft as needed
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] values){
+        switch(sUriMatcher.match(uri)){
+            case ENTITY:
+                Log.i("ContentProvider", "Entity bulkInsert works");
+                break;
+            case INTENT:
+                Log.i("ContentProvider", "Intent bulkInsert works");
+                break;
+            case MODULE:
+                Log.i("ContentProvider", "Module bulkInsert works");
+                break;
+        }
+        return 1;
     }
 
     @Override

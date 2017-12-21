@@ -31,12 +31,12 @@
         <service
             android:name=".MycroftService"
             android:enabled="true"
-            android:exported="false">
+            android:exported="true">
         </service>
 
         <provider
             android:name=".Databases.MycroftContentProvider"
-            android:authorities="Mycroft_Core"
+            android:authorities="com.mabase.tech.mycroft"
             android:enabled="true"
             android:exported="true" />
 

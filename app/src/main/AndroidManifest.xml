@@ -36,7 +36,7 @@
 
         <provider
             android:name=".Databases.MycroftContentProvider"
-            android:authorities="com.mabase.tech.mycroft"
+            android:authorities="www.mabase.tech.mycroft"
             android:enabled="true"
             android:exported="true" />
 

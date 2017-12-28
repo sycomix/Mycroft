@@ -34,8 +34,8 @@ public class MycroftDbHelper extends SQLiteOpenHelper {
             "CREATE TABLE " + MycroftContract.Module.TABLE_NAME + " (" +
                     MycroftContract.Module._ID + " INTEGER PRIMARY KEY," +
                     MycroftContract.Module.COLUMN_NAME_PACKAGE + " TEXT," +
-                    MycroftContract.Module.COLUMN_NAME_SKILL_ID + " TEXT," +
-                    MycroftContract.Module.COLUMN_NAME_TYPE + "TEXT)";
+                    MycroftContract.Module.COLUMN_NAME_SKILL + " TEXT," +
+                    MycroftContract.Module.COLUMN_NAME_TYPE + " TEXT)";
 
     private static final String ENTITIES_DELETE_ENTRIES =
             "DROP TABLE IF EXISTS " + MycroftContract.Entities.TABLE_NAME;

@@ -73,7 +73,7 @@ public class MycroftContentProvider extends ContentProvider {
                 }
                 break;
                 */
-                Log.e("Mycroft","Wow, it's worked the whole time but you forgot a break");
+                Log.e("Mycroft","Putting information in the MODULE table");
                 break;
             default:
                 Log.e("Mycroft","You suck at making Uris");

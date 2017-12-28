@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/Mycroft.iml" filepath="$PROJECT_DIR$/Mycroft.iml" />
       <module fileurl="file://$PROJECT_DIR$/adapt/adapt.iml" filepath="$PROJECT_DIR$/adapt/adapt.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mycroftlistenskill/mycroftlistenskill.iml" filepath="$PROJECT_DIR$/mycroftlistenskill/mycroftlistenskill.iml" />
       <module fileurl="file://$PROJECT_DIR$/mycroftspeakskill/mycroftspeakskill.iml" filepath="$PROJECT_DIR$/mycroftspeakskill/mycroftspeakskill.iml" />
     </modules>
   </component>

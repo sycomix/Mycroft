@@ -9,7 +9,7 @@ import android.provider.BaseColumns;
 
 public class MycroftContract {
 
-    public static final String CONTENT_AUTHORITY = "com.mabase.tech";
+    public static final String CONTENT_AUTHORITY = "www.mabase.tech.mycroft";
 
     //The content authority is used to create the base of all URIs which apps will use to contact
     //this content provider
@@ -23,10 +23,7 @@ public class MycroftContract {
     private MycroftContract() {}
 
     public static final class Entities implements BaseColumns {
-
         public static final String TABLE_NAME = "entities";
-        // Content URI represents the base location for the table
-        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_ENTITY).build();
 
         //This is the value of the word, words, regex, or phrase to be used for tagging, etc
         public static final String COLUMN_NAME_STRING = "string";
@@ -42,9 +39,6 @@ public class MycroftContract {
     //This table handles the breakdown for every intent (or independent task) available in a skill
     //or app. It lists what the action is, and what variables are needed or optional
     public static final class Intents implements BaseColumns {
-        // Content URI represents the base location for the table
-        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_INTENT).build();
-
         //This is the table name
         public static final String TABLE_NAME = "intents";
 
@@ -59,14 +53,11 @@ public class MycroftContract {
     }
 
     public static final class Module implements BaseColumns{
-        // Content URI represents the base location for the table
-        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_MODULE).build();
-
         //This is the table name
         public static final String TABLE_NAME = "modules";
 
         //This is the manifest identifier of a skill that works with this parser
-        public static final String COLUMN_NAME_SKILL_ID = "skill_id";
+        public static final String COLUMN_NAME_SKILL = "skill";
         //This is the package name of the module
         public static final String COLUMN_NAME_PACKAGE = "package";
         //This is the type of module (parser, chatbot, etc)

@@ -57,7 +57,7 @@ public class InstallService extends IntentService {
         Toast.makeText(this, "About to install to DB",Toast.LENGTH_SHORT).show();
 
         //Send it to mycroft
-        //-> ERROR getContentResolver().insert(MODULE_URI, module);
+        getContentResolver().insert(MODULE_URI, module);
     }
 
     private void handleParserIdentify() {

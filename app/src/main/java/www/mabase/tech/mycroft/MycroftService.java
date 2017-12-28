@@ -130,6 +130,15 @@ public class MycroftService extends Service {
 
         startForeground(1225, mBuilder.build());
         //Start always listening voice service
+        /*
+        Check the Mycroft Module database to see if there are any modules marked for STT.
+        Only one can be used at a time (for hotword listening). It should be marked in the Db
+        as the default. Start the service
+         */
+        /*
+        Bind PocketSpinx
+
+         */
 
         /*
         Here it should bind up to 4 parser services

@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/mycroftlistenskill" />
             <option value="$PROJECT_DIR$/mycroftspeakskill" />
+            <option value="$PROJECT_DIR$/pocketsphinx" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

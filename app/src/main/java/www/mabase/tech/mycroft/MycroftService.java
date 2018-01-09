@@ -38,11 +38,16 @@ public class MycroftService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
             final String action = intent.getAction();
+            //This could be changed to a bound service message that checks the process ID against the
+            //initial bound parsers. When all have responded, the global verifier can be reset.
             if (ACTION_PARSE_FINISHED.equals(action)) {
                 handleParserFinished(intent.getStringExtra("parser"), intent.getStringExtra("response"));
+            //This is triggered whenever a parse needs to occur. This could be changed to a
+            //bound service message
             } else if(ACTION_MYCROFT_PARSE.equals(action)) {
                 Toast.makeText(this, "Sending utterance "+intent.getStringExtra("utterance"), Toast.LENGTH_SHORT).show();
                 parseUtterance(intent.getStringExtra("utterance"));
+                //This is checking if it is a new module, or an existing module, for DB purposes
             } else if (ACTION_MODULE_CHECK.equals(action)) {
                 String module = intent.getStringExtra("package");
                 Toast.makeText(this, "Checking if module installed", Toast.LENGTH_SHORT).show();
@@ -52,20 +57,27 @@ public class MycroftService extends Service {
         return START_STICKY;
     }
 
+    /*
+    This method exists to check if the module is already installed.
+    Is it needed? If so, why?
+
+    Check module can be triggered by an update OR a new install, if it is an update than it needs
+    to clear out old database entries, and replace them with new ones.
+     */
     private void checkModule(String module){
         Log.i("MycroftService", "Checking module");
         Toast.makeText(this, "Checking new module",Toast.LENGTH_SHORT).show();
-        //Replace this with a DB query
-        Intent install = new Intent();
+        //Replace this with a DB query, to see if the module already exists in the database
+        //For now, this is just installing adapt.
         String ADAPT_PACKAGE = "tech.mabase.www.adapt";
         String ADAPT_CLASS = "InstallService";
         try {
-            Intent parserInit = new Intent();
+            Intent install = new Intent();
             //This should allow dynamic package names
-            parserInit.setComponent(ComponentName.createRelative(ADAPT_PACKAGE,ADAPT_PACKAGE+"."+ADAPT_CLASS));
-            parserInit.setAction("android.intent.action.MODULE_INSTALL");
+            install.setComponent(ComponentName.createRelative(ADAPT_PACKAGE,ADAPT_PACKAGE+"."+ADAPT_CLASS));
+            install.setAction("android.intent.action.MODULE_INSTALL");
             Toast.makeText(this, "Starting module install",Toast.LENGTH_SHORT).show();
-            startService(parserInit);
+            startService(install);
             Log.i("MycroftService", "starting install module");
         } catch (Exception e) {
             Log.e("MycroftService", "Couldn't seem to start the module install service");
@@ -139,6 +151,17 @@ public class MycroftService extends Service {
         Bind PocketSpinx
 
          */
+        String LISTEN_PACKAGE = "tech.mabase.www.mycroftlistenskill";
+        String LISTEN_CLASS = "PocketSphinxService";
+        try {
+            Intent listenerInit = new Intent();
+            //This should allow dynamic package names
+            listenerInit.setComponent(ComponentName.createRelative(LISTEN_PACKAGE,LISTEN_PACKAGE+"."+LISTEN_CLASS));
+            bindService(listenerInit, nConnection, Context.BIND_AUTO_CREATE);
+        } catch (Exception e) {
+            Log.e("MycroftService", "Couldn't seem to bind Mycroft Listen Skill");
+            Toast.makeText(getApplicationContext(), "Couldn't bind PocketSphinx", Toast.LENGTH_SHORT).show();
+        }
 
         /*
         Here it should bind up to 4 parser services
@@ -156,9 +179,9 @@ public class MycroftService extends Service {
         }
     }
 
-    Messenger mService = null;
+    Messenger mService, nService = null;
     /** Flag indicating whether we have called bind on the service. */
-    boolean mBound;
+    boolean mBound, nBound;
 
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -180,6 +203,25 @@ public class MycroftService extends Service {
         }
     };
 
+    //This is a simple service copy, for the second bound service (Listener)
+    private ServiceConnection nConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            // This is called when the connection with the service has been
+            // established, giving us the object we can use to
+            // interact with the service.  We are communicating with the
+            // service using a Messenger, so here we get a client-side
+            // representation of that from the raw IBinder object.
+            nService = new Messenger(service);
+            nBound = true;
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            // This is called when the connection with the service has been
+            // unexpectedly disconnected -- that is, its process crashed.
+            nService = null;
+            nBound = false;
+        }
+    };
 
     @Override
     public void onDestroy() {

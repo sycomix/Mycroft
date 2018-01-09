@@ -66,6 +66,7 @@ public class InstallService extends IntentService {
         Toast.makeText(this, "Parser Identified",Toast.LENGTH_SHORT).show();
         String MYCROFT_PACKAGE = "www.mabase.tech.mycroft";
         String MYCROFT_CLASS = "MycroftService";
+        //What is the purpose of module check?
         try {
             Intent check = new Intent();
             //This should allow dynamic package names

@@ -1,44 +1,14 @@
-/* ====================================================================
- * Copyright (c) 2014 Alpha Cephei Inc.  All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY ALPHA CEPHEI INC. ``AS IS'' AND
- * ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY
- * NOR ITS EMPLOYEES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * ====================================================================
- */
-
 package tech.mabase.www.mycroftlistenskill;
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.pm.PackageManager;
+import android.app.Service;
+import android.content.Intent;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+
+import android.util.Log;
 import android.os.AsyncTask;
-import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -54,14 +24,11 @@ import edu.cmu.pocketsphinx.SpeechRecognizerSetup;
 
 import static android.widget.Toast.makeText;
 
-/*
-This whole activity needs to be converted into an IntentService that can be started by ANY skill,
-or run as a background service for Mycroft. It can be bound for hot word listening, or it can be
-implemented by a skill for continual listening.
- */
+public class PocketSphinxService extends Service implements RecognitionListener {
+    public PocketSphinxService() {
+    }
 
-public class PocketSphinxActivity extends Activity implements
-        RecognitionListener {
+    private static final String ACTION_SKILL_CALL = "android.intent.action.SKILL_CALL";
 
     /* Named searches allow to quickly reconfigure the decoder */
     private static final String KWS_SEARCH = "wakeup";
@@ -75,49 +42,84 @@ public class PocketSphinxActivity extends Activity implements
       * need to updat the dictionary*/
     private static final String KEYPHRASE = "oh mighty computer";
 
-    /* Used to handle permission request */
-    private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
-
     private SpeechRecognizer recognizer;
     private HashMap<String, Integer> captions;
 
+    final Messenger mMessenger = new Messenger(new IncomingHandler());
+
+    /*
+    This binds to Mycroft core when it starts, and in turn binds Mycroft Core to it, so that it can
+    send PARSE_UTTERANCE messages to it (or should that stsay a generic broadcast for other intent persers,
+    such as the command line interface???
+     */
     @Override
-    public void onCreate(Bundle state) {
-        super.onCreate(state);
+    public IBinder onBind(Intent intent) {
+        Toast.makeText(getApplicationContext(), "binding PocketSphinx", Toast.LENGTH_SHORT).show();
+        return mMessenger.getBinder();
+    }
 
-        // Prepare the data for UI
-        captions = new HashMap<>();
-        captions.put(KWS_SEARCH, R.string.kws_caption);
-        captions.put(MENU_SEARCH, R.string.menu_caption);
-        captions.put(DIGITS_SEARCH, R.string.digits_caption);
-        captions.put(PHONE_SEARCH, R.string.phone_caption);
-        captions.put(FORECAST_SEARCH, R.string.forecast_caption);
-        setContentView(R.layout.main);
-        ((TextView) findViewById(R.id.caption_text))
-                .setText("Preparing the recognizer");
+    /*
+    When being used as a hotword listener, it should be bound by the lifecycle of Mycroft Core, which
+    means that it shouldn't wakelock unless the setting is specifically set by Core. When it is being
+    called in a specific context for a skill, it should stop the general listening service, and
+    start a specific one based on the needs of the skill.
 
-        // Check if user has given permission to record audio
-        int permissionCheck = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO);
-        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_RECORD_AUDIO);
-            return;
+    THis concept could mean that the Skill should be a content provider, so as to offer a new dictionary
+    to PocketSphinx, although I am inclined to believe this adds a level of unneeded complexity..
+     */
+
+    //This module shound't be receiving messages. However, if it does, this is where they will be
+    //handled. I might need to bind it later for a "back and fourth" between a skill though...
+    class IncomingHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            Log.e("MycroftListener","This module is only bound to keep it running. It should not be receiving messages");
         }
-        // Recognizer initialization is a time-consuming and it involves IO,
-        // so we execute it in async task
+    }
+
+    /*PocketSphinx should be started when it is bound by Mycroft Core. However, it might need to
+    run a one off voice recognition for a skill, so the skill should run a
+    startService(MycroftListen) which will cause the main service to stop, run a once off voice
+    recognition service, and then restart the standard listening protocol. Maybe I need to temporaraly
+    bind the service
+    */
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null) {
+            final String action = intent.getAction();
+            //This could be changed to a bound service message that checks the process ID against the
+            //initial bound parsers. When all have responded, the global verifier can be reset.
+            if (ACTION_SKILL_CALL.equals(action)) {
+                handleSkillCall();
+            }
+        }
+        return START_STICKY;
+    }
+
+    //When a skill just needs to call the voice service once, it's called here
+    public void handleSkillCall() {
+        Log.i("MycroftListen","Handeling a skill call");
+    }
+
+    public void onCreate() {
+        super.onCreate();
+
+        //There needs to be implemented a permission check before this is initalized, otherwise the
+        //system could crash, or users wouldn't know why it isn't working
         new SetupTask(this).execute();
     }
 
     private static class SetupTask extends AsyncTask<Void, Void, Exception> {
-        WeakReference<PocketSphinxActivity> activityReference;
-        SetupTask(PocketSphinxActivity activity) {
-            this.activityReference = new WeakReference<>(activity);
+        WeakReference<PocketSphinxService> serviceReference;
+        SetupTask(PocketSphinxService service) {
+            this.serviceReference = new WeakReference<PocketSphinxService>(service);
         }
         @Override
         protected Exception doInBackground(Void... params) {
             try {
-                Assets assets = new Assets(activityReference.get());
+                Assets assets = new Assets(serviceReference.get());
                 File assetDir = assets.syncAssets();
-                activityReference.get().setupRecognizer(assetDir);
+                serviceReference.get().setupRecognizer(assetDir);
             } catch (IOException e) {
                 return e;
             }
@@ -126,26 +128,9 @@ public class PocketSphinxActivity extends Activity implements
         @Override
         protected void onPostExecute(Exception result) {
             if (result != null) {
-                ((TextView) activityReference.get().findViewById(R.id.caption_text))
-                        .setText("Failed to init recognizer " + result);
+                Log.e("MycroftListen", "Failed to init recognizer " + result);
             } else {
-                activityReference.get().switchSearch(KWS_SEARCH);
-            }
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions, @NonNull  int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == PERMISSIONS_REQUEST_RECORD_AUDIO) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Recognizer initialization is a time-consuming and it involves IO,
-                // so we execute it in async task
-                new SetupTask(this).execute();
-            } else {
-                finish();
+                serviceReference.get().switchSearch(KWS_SEARCH);
             }
         }
     }
@@ -180,7 +165,7 @@ public class PocketSphinxActivity extends Activity implements
         else if (text.equals(FORECAST_SEARCH))
             switchSearch(FORECAST_SEARCH);
         else
-            ((TextView) findViewById(R.id.result_text)).setText(text);
+            Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -188,7 +173,7 @@ public class PocketSphinxActivity extends Activity implements
      */
     @Override
     public void onResult(Hypothesis hypothesis) {
-        ((TextView) findViewById(R.id.result_text)).setText("");
+        Toast.makeText(this, "", Toast.LENGTH_SHORT).show();
         if (hypothesis != null) {
             String text = hypothesis.getHypstr();
             makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
@@ -218,7 +203,7 @@ public class PocketSphinxActivity extends Activity implements
             recognizer.startListening(searchName, 10000);
 
         String caption = getResources().getString(captions.get(searchName));
-        ((TextView) findViewById(R.id.caption_text)).setText(caption);
+        Toast.makeText(this, caption, Toast.LENGTH_SHORT).show();
     }
 
     private void setupRecognizer(File assetsDir) throws IOException {
@@ -260,7 +245,7 @@ public class PocketSphinxActivity extends Activity implements
 
     @Override
     public void onError(Exception error) {
-        ((TextView) findViewById(R.id.caption_text)).setText(error.getMessage());
+        Toast.makeText(this, error.getMessage(), Toast.LENGTH_SHORT).show();
     }
 
     @Override

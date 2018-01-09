@@ -1,1 +1,1 @@
-include ':app', ':adapt', ':mycroftspeakskill', ':mycroftlistenskill'
+include ':app', ':adapt', ':mycroftspeakskill', ':mycroftlistenskill', ':pocketsphinx'

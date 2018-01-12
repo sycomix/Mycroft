@@ -39,7 +39,7 @@ public class PocketSphinxService extends Service implements RecognitionListener 
 
     /* Keyword we are looking for to activate menu. Change this to my app name
      * Maybe even load the app name in based on the main Mycroft settings. However it might
-      * need to updat the dictionary*/
+      * need to update the dictionary*/
     private static final String KEYPHRASE = "oh mighty computer";
 
     private SpeechRecognizer recognizer;
@@ -49,7 +49,7 @@ public class PocketSphinxService extends Service implements RecognitionListener 
 
     /*
     This binds to Mycroft core when it starts, and in turn binds Mycroft Core to it, so that it can
-    send PARSE_UTTERANCE messages to it (or should that stsay a generic broadcast for other intent persers,
+    send PARSE_UTTERANCE messages to it (or should that stay a generic broadcast for other intent persers,
     such as the command line interface???
      */
     @Override
@@ -112,7 +112,7 @@ public class PocketSphinxService extends Service implements RecognitionListener 
     private static class SetupTask extends AsyncTask<Void, Void, Exception> {
         WeakReference<PocketSphinxService> serviceReference;
         SetupTask(PocketSphinxService service) {
-            this.serviceReference = new WeakReference<PocketSphinxService>(service);
+            this.serviceReference = new WeakReference<>(service);
         }
         @Override
         protected Exception doInBackground(Void... params) {
@@ -202,8 +202,8 @@ public class PocketSphinxService extends Service implements RecognitionListener 
         else
             recognizer.startListening(searchName, 10000);
 
-        String caption = getResources().getString(captions.get(searchName));
-        Toast.makeText(this, caption, Toast.LENGTH_SHORT).show();
+        //String caption = getResources().getString(captions.get(searchName));
+        Toast.makeText(this, searchName, Toast.LENGTH_SHORT).show();
     }
 
     private void setupRecognizer(File assetsDir) throws IOException {
@@ -213,9 +213,7 @@ public class PocketSphinxService extends Service implements RecognitionListener 
         recognizer = SpeechRecognizerSetup.defaultSetup()
                 .setAcousticModel(new File(assetsDir, "en-us-ptm"))
                 .setDictionary(new File(assetsDir, "cmudict-en-us.dict"))
-
-                .setRawLogDir(assetsDir) // To disable logging of raw audio comment out this call (takes a lot of space on the device)
-
+                //.setRawLogDir(assetsDir) // To disable logging of raw audio comment out this call (takes a lot of space on the device)
                 .getRecognizer();
         recognizer.addListener(this);
 

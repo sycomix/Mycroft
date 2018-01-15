@@ -32,15 +32,12 @@ public class PocketSphinxService extends Service implements RecognitionListener 
 
     /* Named searches allow to quickly reconfigure the decoder */
     private static final String KWS_SEARCH = "wakeup";
-    private static final String FORECAST_SEARCH = "forecast";
-    private static final String DIGITS_SEARCH = "digits";
-    private static final String PHONE_SEARCH = "phones";
-    private static final String MENU_SEARCH = "menu";
+    private static final String FREE_SPEECH = "free";
 
     /* Keyword we are looking for to activate menu. Change this to my app name
      * Maybe even load the app name in based on the main Mycroft settings. However it might
       * need to update the dictionary*/
-    private static final String KEYPHRASE = "oh mighty computer";
+    private static final String KEYPHRASE = "hey mega man";
 
     private SpeechRecognizer recognizer;
     private HashMap<String, Integer> captions;
@@ -150,6 +147,7 @@ public class PocketSphinxService extends Service implements RecognitionListener 
      * keyword spotting mode we can react here, in other modes we need to wait
      * for final result in onResult.
      */
+    //We have it waiting for its, name. If it is found, listen to the generic speech
     @Override
     public void onPartialResult(Hypothesis hypothesis) {
         if (hypothesis == null)
@@ -157,15 +155,8 @@ public class PocketSphinxService extends Service implements RecognitionListener 
 
         String text = hypothesis.getHypstr();
         if (text.equals(KEYPHRASE))
-            switchSearch(MENU_SEARCH);
-        else if (text.equals(DIGITS_SEARCH))
-            switchSearch(DIGITS_SEARCH);
-        else if (text.equals(PHONE_SEARCH))
-            switchSearch(PHONE_SEARCH);
-        else if (text.equals(FORECAST_SEARCH))
-            switchSearch(FORECAST_SEARCH);
-        else
-            Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+            //Replace this with a generic speech listener (That listens for any word in the dictionary)
+            switchSearch(FREE_SPEECH); //This needs to return the output to Mycroft, for parsing
     }
 
     /**
@@ -224,21 +215,8 @@ public class PocketSphinxService extends Service implements RecognitionListener 
         // Create keyword-activation search.
         recognizer.addKeyphraseSearch(KWS_SEARCH, KEYPHRASE);
 
-        // Create grammar-based search for selection between demos
-        File menuGrammar = new File(assetsDir, "menu.gram");
-        recognizer.addGrammarSearch(MENU_SEARCH, menuGrammar);
-
-        // Create grammar-based search for digit recognition
-        File digitsGrammar = new File(assetsDir, "digits.gram");
-        recognizer.addGrammarSearch(DIGITS_SEARCH, digitsGrammar);
-
-        // Create language model search
-        File languageModel = new File(assetsDir, "weather.dmp");
-        recognizer.addNgramSearch(FORECAST_SEARCH, languageModel);
-
-        // Phonetic search
-        File phoneticModel = new File(assetsDir, "en-phone.dmp");
-        recognizer.addAllphoneSearch(PHONE_SEARCH, phoneticModel);
+        File ngramModel = new File(assetsDir, "en-us.lm.bin");
+        recognizer.addNgramSearch(FREE_SPEECH, ngramModel);
     }
 
     @Override
